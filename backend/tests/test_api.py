@@ -155,3 +155,23 @@ async def test_full_order_lifecycle():
         assert notif_res.status_code == 200
         assert len(notif_res.json()) > 0
 
+
+def test_cors_origins_settings_parsing(monkeypatch):
+    from app.config import Settings
+
+    # Test Render environment variable formatted as JSON array string
+    monkeypatch.setenv("BACKEND_CORS_ORIGINS", '["http://localhost:3000", "https://nexuscore.onrender.com"]')
+    s_json = Settings()
+    assert s_json.BACKEND_CORS_ORIGINS == ["http://localhost:3000", "https://nexuscore.onrender.com"]
+
+    # Test comma-separated string
+    monkeypatch.setenv("BACKEND_CORS_ORIGINS", "http://localhost:3000,https://example.com")
+    s_comma = Settings()
+    assert s_comma.BACKEND_CORS_ORIGINS == ["http://localhost:3000", "https://example.com"]
+
+    # Test single-quoted JSON-like string
+    monkeypatch.setenv("BACKEND_CORS_ORIGINS", "['http://localhost:3000', 'https://example.com']")
+    s_sq = Settings()
+    assert s_sq.BACKEND_CORS_ORIGINS == ["http://localhost:3000", "https://example.com"]
+
+

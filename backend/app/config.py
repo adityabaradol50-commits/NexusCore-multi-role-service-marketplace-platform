@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER_PASSWORD: str = "AdminPassword123!"
     
     # CORS Configuration
-    BACKEND_CORS_ORIGINS: List[str] = [
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         "http://localhost:8000",
@@ -59,11 +59,17 @@ class Settings(BaseSettings):
         """Supports comma-separated strings or JSON arrays for Render environment variable flexibility."""
         if isinstance(v, str):
             v_stripped = v.strip()
+            if not v_stripped:
+                return []
             if v_stripped.startswith("[") and v_stripped.endswith("]"):
                 try:
-                    return json.loads(v_stripped)
+                    res = json.loads(v_stripped)
+                    if isinstance(res, list):
+                        return [str(i).strip() for i in res if str(i).strip()]
                 except Exception:
                     pass
+                items = v_stripped[1:-1].split(",")
+                return [i.strip().strip("'\"") for i in items if i.strip().strip("'\"")]
             return [i.strip() for i in v_stripped.split(",") if i.strip()]
         return v
     
