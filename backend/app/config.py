@@ -18,15 +18,19 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 10
     
-    @field_validator("DATABASE_URL", mode="after")
+    @field_validator("DATABASE_URL", mode="before")
     @classmethod
     def assemble_database_url(cls, v: str) -> str:
-        """Ensures PostgreSQL URLs use the asyncpg driver (required for Render/Supabase/RDS)."""
-        if v.startswith("postgres://"):
-            return v.replace("postgres://", "postgresql+asyncpg://", 1)
-        if v.startswith("postgresql://") and not v.startswith("postgresql+asyncpg://"):
-            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
-        return v
+        """Ensures PostgreSQL URLs use the asyncpg driver (required for Render/Supabase/RDS) and strips whitespace/quotes."""
+        if not isinstance(v, str):
+            return v
+        v_stripped = v.strip().strip('"\'')
+        if v_stripped.startswith("postgres://"):
+            return v_stripped.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v_stripped.startswith("postgresql://") and not v_stripped.startswith("postgresql+asyncpg://"):
+            return v_stripped.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v_stripped
+
 
     # Security & JWT Authentication
     SECRET_KEY: str = "supersecret-nexuscore-dev-key-change-in-production-min32chars"

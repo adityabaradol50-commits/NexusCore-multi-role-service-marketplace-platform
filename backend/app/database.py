@@ -3,10 +3,22 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 
+def get_normalized_database_url(raw_url: str) -> str:
+    """Normalizes database URLs for async SQLAlchemy compatibility."""
+    if not isinstance(raw_url, str):
+        return raw_url
+    url = raw_url.strip().strip('"\'')
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://") and not url.startswith("postgresql+asyncpg://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
+
 # Determine engine parameters based on database driver
 engine_kwargs = {"echo": settings.DEBUG, "future": True}
+db_url = get_normalized_database_url(settings.DATABASE_URL)
 
-if settings.DATABASE_URL.startswith("sqlite"):
+if db_url.startswith("sqlite"):
     engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
     # PostgreSQL production-grade connection pooling
@@ -14,7 +26,7 @@ else:
     engine_kwargs["max_overflow"] = settings.DB_MAX_OVERFLOW
     engine_kwargs["pool_pre_ping"] = True
 
-engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
+engine = create_async_engine(db_url, **engine_kwargs)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,

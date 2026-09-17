@@ -175,3 +175,27 @@ def test_cors_origins_settings_parsing(monkeypatch):
     assert s_sq.BACKEND_CORS_ORIGINS == ["http://localhost:3000", "https://example.com"]
 
 
+def test_database_url_normalization(monkeypatch):
+    from app.config import Settings
+    from app.database import get_normalized_database_url
+    from sqlalchemy.engine import make_url
+
+    dummy_urls = [
+        ("postgres://dummy_user:dummy_pass@localhost:5432/dummy_db", "postgresql+asyncpg"),
+        ("postgresql://dummy_user:dummy_pass@localhost:5432/dummy_db", "postgresql+asyncpg"),
+        (" postgresql://dummy_user:dummy_pass@localhost:5432/dummy_db ", "postgresql+asyncpg"),
+        ('"postgres://dummy_user:dummy_pass@localhost:5432/dummy_db"', "postgresql+asyncpg"),
+        ("sqlite+aiosqlite:///./nexuscore.db", "sqlite+aiosqlite"),
+    ]
+
+    for raw_input, expected_driver in dummy_urls:
+        monkeypatch.setenv("DATABASE_URL", raw_input)
+        s = Settings()
+        assert s.DATABASE_URL.startswith(expected_driver)
+        normalized = get_normalized_database_url(raw_input)
+        assert normalized.startswith(expected_driver)
+        parsed_url = make_url(normalized)
+        assert parsed_url.drivername == expected_driver
+
+
+
