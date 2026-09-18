@@ -20,9 +20,9 @@ export default function ConsumerLayout({ children }: { children: React.ReactNode
   return (
     <ProtectedRoute allowedRoles={['consumer']}>
       <DashboardShell
-        roleTitle="Client Portal"
+        roleTitle="Customer Portal"
         roleBadgeColor="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
-        roleBadgeText="CLIENT"
+        roleBadgeText="CUSTOMER"
         navItems={consumerNav}
       >
         {children}
