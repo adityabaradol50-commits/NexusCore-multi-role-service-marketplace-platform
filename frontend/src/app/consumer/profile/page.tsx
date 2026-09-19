@@ -173,6 +173,7 @@ export default function ConsumerProfilePage() {
               type="submit"
               variant="primary"
               size="md"
+              className="w-full sm:w-auto"
               isLoading={updateProfileMutation.isPending}
               leftIcon={<Save className="w-4 h-4" />}
             >

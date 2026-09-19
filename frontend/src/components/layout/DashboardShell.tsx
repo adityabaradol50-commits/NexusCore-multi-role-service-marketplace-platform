@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { 
   Menu, X, Bell, LogOut, ChevronRight, AlertTriangle, 
-  CheckCircle2, AlertOctagon, ShieldCheck, Building, Sparkles
+  CheckCircle2, AlertOctagon, ShieldCheck, Building, Monitor, Smartphone, Tablet, Laptop, Maximize2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -28,6 +28,8 @@ interface DashboardShellProps {
   children: React.ReactNode;
 }
 
+type QAPreviewMode = 'AUTO' | 'PHONE' | 'TABLET' | 'LAPTOP' | 'DESKTOP';
+
 export default function DashboardShell({
   roleTitle,
   roleBadgeText,
@@ -41,6 +43,24 @@ export default function DashboardShell({
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [qaPreviewMode, setQaPreviewMode] = useState<QAPreviewMode>('AUTO');
+  const [showQaBar, setShowQaBar] = useState(false);
+
+  // Close drawer on path change or escape key press
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setShowLogoutConfirm(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Compute breadcrumbs
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -58,143 +78,210 @@ export default function DashboardShell({
   // Group navigation items by category
   const categories = Array.from(new Set(navItems.map((item) => item.category || 'Navigation')));
 
+  // QA Simulated Viewport Container widths
+  const qaWidthClasses: Record<QAPreviewMode, string> = {
+    AUTO: 'w-full',
+    PHONE: 'max-w-[375px] mx-auto border-x border-zinc-800 shadow-2xl rounded-2xl my-4 overflow-hidden bg-zinc-950',
+    TABLET: 'max-w-[820px] mx-auto border-x border-zinc-800 shadow-2xl rounded-2xl my-4 overflow-hidden bg-zinc-950',
+    LAPTOP: 'max-w-[1366px] mx-auto border-x border-zinc-800 shadow-2xl rounded-2xl my-4 overflow-hidden bg-zinc-950',
+    DESKTOP: 'max-w-[1920px] mx-auto border-x border-zinc-800 shadow-2xl rounded-2xl my-4 overflow-hidden bg-zinc-950',
+  };
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col md:flex-row font-sans selection:bg-indigo-500/30 selection:text-white">
       {/* Mobile Drawer Overlay */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-black/70 backdrop-blur-xs md:hidden animate-in fade-in duration-150"
           onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
       {/* 1. Sidebar Navigation */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-60 bg-zinc-900/90 border-r border-zinc-800 flex flex-col justify-between transition-transform duration-200 md:static md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 md:w-60 bg-zinc-900/95 md:bg-zinc-900/90 border-r border-zinc-800 flex flex-col justify-between transition-transform duration-200 md:static md:translate-x-0 ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div>
-          {/* Brand Header */}
-          <div className="px-5 py-4 border-b border-zinc-800/80 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-xs group-hover:bg-indigo-500 transition-colors">
-                N
+        <div className="flex flex-col h-full justify-between">
+          <div>
+            {/* Brand Header */}
+            <div className="px-5 py-4 border-b border-zinc-800/80 flex items-center justify-between">
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-xs group-hover:bg-indigo-500 transition-colors">
+                  N
+                </div>
+                <div>
+                  <span className="font-bold text-sm tracking-tight text-white">Nexus<span className="text-indigo-400">Core</span></span>
+                  <span className="block text-[10px] text-zinc-400 font-medium uppercase tracking-wider">{roleTitle}</span>
+                </div>
+              </Link>
+
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white md:hidden hover:bg-zinc-800 touch-target flex items-center justify-center"
+                title="Close menu"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-160px)]">
+              {categories.map((category) => {
+                const categoryItems = navItems.filter((item) => (item.category || 'Navigation') === category)
+                  .filter((item) => {
+                    if (user?.role === 'consumer') {
+                      return !item.href.startsWith('/client') && !item.href.startsWith('/admin') && !item.href.startsWith('/owner');
+                    }
+                    if (user?.role === 'client') {
+                      return !item.href.startsWith('/consumer');
+                    }
+                    if (user?.role === 'admin') {
+                      return !item.href.startsWith('/consumer') && !item.href.startsWith('/client') && !item.href.startsWith('/owner');
+                    }
+                    return true;
+                  });
+
+                if (categoryItems.length === 0) return null;
+
+                return (
+                  <div key={category} className="space-y-1">
+                    <span className="px-3 text-[10px] font-semibold text-zinc-400 tracking-wider uppercase">
+                      {category}
+                    </span>
+                    <div className="space-y-0.5 mt-1">
+                      {categoryItems.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = pathname === item.href || (item.href !== `/${user?.role}/dashboard` && pathname.startsWith(item.href));
+
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-center justify-between px-3 py-2.5 md:py-2 rounded-lg text-xs font-medium transition-all ${
+                              isActive
+                                ? 'bg-indigo-600/15 text-indigo-300 font-semibold border-l-2 border-indigo-500 pl-2.5'
+                                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-zinc-400'}`} />
+                              <span>{item.label}</span>
+                            </div>
+
+                            {item.badge !== undefined && (
+                              <span className="px-1.5 py-0.2 rounded-md text-[10px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700/60">
+                                {item.badge}
+                              </span>
+                            )}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Sidebar Footer User Card & Logout */}
+          <div className="p-3 border-t border-zinc-800/80 space-y-2">
+            <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-zinc-950/50 border border-zinc-800/60">
+              <div className="w-7 h-7 rounded-md bg-zinc-800 border border-zinc-700/60 flex items-center justify-center font-bold text-xs text-zinc-200 shrink-0">
+                {user?.role === 'client' && user?.client_profile?.business_name
+                  ? user.client_profile.business_name.charAt(0)
+                  : user?.first_name?.charAt(0) || 'U'}
               </div>
-              <div>
-                <span className="font-bold text-sm tracking-tight text-white">Nexus<span className="text-indigo-400">Core</span></span>
-                <span className="block text-[10px] text-zinc-400 font-medium uppercase tracking-wider">{roleTitle}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-zinc-100 truncate">
+                  {user?.role === 'client' && user?.client_profile?.business_name
+                    ? user.client_profile.business_name
+                    : `${user?.first_name || ''} ${user?.last_name || ''}`}
+                </p>
+                <p className="text-[10px] text-zinc-400 truncate">
+                  {user?.role === 'client'
+                    ? `Owner: ${user?.first_name} ${user?.last_name}`
+                    : user?.email}
+                </p>
               </div>
-            </Link>
+            </div>
 
             <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="p-1 rounded-lg text-zinc-400 hover:text-white md:hidden hover:bg-zinc-800"
+              onClick={() => setShowLogoutConfirm(true)}
+              className="w-full py-2 md:py-1.5 px-2.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-rose-400 hover:bg-rose-950/20 border border-transparent hover:border-rose-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <X className="w-4 h-4" />
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
             </button>
           </div>
-
-          {/* Navigation Links (Role-Aware Enforced) */}
-          <nav className="p-3 space-y-4">
-            {categories.map((category) => {
-              const categoryItems = navItems.filter((item) => (item.category || 'Navigation') === category)
-                .filter((item) => {
-                  if (user?.role === 'consumer') {
-                    return !item.href.startsWith('/client') && !item.href.startsWith('/admin') && !item.href.startsWith('/owner');
-                  }
-                  if (user?.role === 'client') {
-                    return !item.href.startsWith('/consumer');
-                  }
-                  if (user?.role === 'admin') {
-                    return !item.href.startsWith('/consumer') && !item.href.startsWith('/client') && !item.href.startsWith('/owner');
-                  }
-                  return true;
-                });
-
-              if (categoryItems.length === 0) return null;
-
-              return (
-                <div key={category} className="space-y-1">
-                  <span className="px-3 text-[10px] font-semibold text-zinc-400 tracking-wider uppercase">
-                    {category}
-                  </span>
-                  <div className="space-y-0.5 mt-1">
-                    {categoryItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = pathname === item.href || (item.href !== `/${user?.role}/dashboard` && pathname.startsWith(item.href));
-
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={() => setMobileMenuOpen(false)}
-                          className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                            isActive
-                              ? 'bg-indigo-600/15 text-indigo-300 font-semibold border-l-2 border-indigo-500 pl-2.5'
-                              : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-zinc-400'}`} />
-                            <span>{item.label}</span>
-                          </div>
-
-                          {item.badge !== undefined && (
-                            <span className="px-1.5 py-0.2 rounded-md text-[10px] font-bold bg-zinc-800 text-zinc-300 border border-zinc-700/60">
-                              {item.badge}
-                            </span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Sidebar Footer User Card & Logout */}
-        <div className="p-3 border-t border-zinc-800/80 space-y-2">
-          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-zinc-950/50 border border-zinc-800/60">
-            <div className="w-7 h-7 rounded-md bg-zinc-800 border border-zinc-700/60 flex items-center justify-center font-bold text-xs text-zinc-200 shrink-0">
-              {user?.role === 'client' && user?.client_profile?.business_name
-                ? user.client_profile.business_name.charAt(0)
-                : user?.first_name?.charAt(0) || 'U'}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-zinc-100 truncate">
-                {user?.role === 'client' && user?.client_profile?.business_name
-                  ? user.client_profile.business_name
-                  : `${user?.first_name || ''} ${user?.last_name || ''}`}
-              </p>
-              <p className="text-[10px] text-zinc-400 truncate">
-                {user?.role === 'client'
-                  ? `Owner: ${user?.first_name} ${user?.last_name}`
-                  : user?.email}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowLogoutConfirm(true)}
-            className="w-full py-1.5 px-2.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-rose-400 hover:bg-rose-950/20 border border-transparent hover:border-rose-900/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign Out</span>
-          </button>
         </div>
       </aside>
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${qaWidthClasses[qaPreviewMode]}`}>
+        {/* QA Developer Viewport Preview Bar (Collapsible) */}
+        {showQaBar && (
+          <div className="bg-indigo-950/90 border-b border-indigo-800/60 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-indigo-200">
+            <div className="flex items-center gap-2 font-medium">
+              <Monitor className="w-3.5 h-3.5 text-indigo-400" />
+              <span>QA Viewport QA Test Bar:</span>
+              <span className="text-indigo-400 font-bold">{qaPreviewMode}</span>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-lg border border-indigo-500/20">
+              <button
+                onClick={() => setQaPreviewMode('AUTO')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                  qaPreviewMode === 'AUTO' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Maximize2 className="w-3 h-3" /> Auto (Default)
+              </button>
+              <button
+                onClick={() => setQaPreviewMode('PHONE')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                  qaPreviewMode === 'PHONE' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Smartphone className="w-3 h-3" /> Phone (375px)
+              </button>
+              <button
+                onClick={() => setQaPreviewMode('TABLET')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                  qaPreviewMode === 'TABLET' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Tablet className="w-3 h-3" /> Tablet (820px)
+              </button>
+              <button
+                onClick={() => setQaPreviewMode('LAPTOP')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                  qaPreviewMode === 'LAPTOP' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Laptop className="w-3 h-3" /> Laptop (1366px)
+              </button>
+              <button
+                onClick={() => setQaPreviewMode('DESKTOP')}
+                className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-colors flex items-center gap-1 ${
+                  qaPreviewMode === 'DESKTOP' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Monitor className="w-3 h-3" /> Desktop (1920px)
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Top Header */}
         <header className="sticky top-0 z-30 bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800/80 px-4 sm:px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white md:hidden border border-zinc-700"
+              className="p-1.5 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white md:hidden border border-zinc-700 touch-target flex items-center justify-center"
+              aria-label="Open navigation menu"
             >
               <Menu className="w-4 h-4" />
             </button>
@@ -202,15 +289,24 @@ export default function DashboardShell({
             {/* Breadcrumb */}
             <div className="flex items-center gap-1.5 text-xs text-zinc-400">
               <span className="capitalize">{roleTitle}</span>
-              <ChevronRight className="w-3.5 h-3.5 text-zinc-600" />
-              <span className="font-semibold text-zinc-100">{formattedBreadcrumb}</span>
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-600 shrink-0" />
+              <span className="font-semibold text-zinc-100 truncate max-w-[120px] sm:max-w-none">{formattedBreadcrumb}</span>
             </div>
           </div>
 
           {/* Header Right Actions */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Developer QA Preview Toggle Button */}
+            <button
+              onClick={() => setShowQaBar(!showQaBar)}
+              className="p-1.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700 text-zinc-400 hover:text-indigo-300 border border-zinc-700/60 transition-colors"
+              title="Toggle Dev QA Viewport Simulator"
+            >
+              <Monitor className="w-4 h-4" />
+            </button>
+
             {user?.role === 'client' && user?.client_profile?.business_name && (
-              <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
+              <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs">
                 <span className="font-semibold text-zinc-200">{user.client_profile.business_name}</span>
                 <span className="text-zinc-600">·</span>
                 <span className="text-emerald-400 text-[11px]">Verified Owner</span>
@@ -226,7 +322,7 @@ export default function DashboardShell({
                   title="Switch to Owner Portal"
                 >
                   <Building className="w-3.5 h-3.5" />
-                  <span>Owner Portal</span>
+                  <span className="hidden lg:inline">Owner Portal</span>
                 </Link>
               ) : (
                 <Link
@@ -235,7 +331,7 @@ export default function DashboardShell({
                   title="Open Admin Command Center"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Admin Portal</span>
+                  <span className="hidden lg:inline">Admin Portal</span>
                 </Link>
               )
             )}
@@ -279,7 +375,7 @@ export default function DashboardShell({
 
             {user.client_profile?.approval_status === 'APPROVED' && (
               <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-2 text-xs text-emerald-300">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 <span>Verified Business Partner — Catalog is active and accepting requests.</span>
               </div>
             )}

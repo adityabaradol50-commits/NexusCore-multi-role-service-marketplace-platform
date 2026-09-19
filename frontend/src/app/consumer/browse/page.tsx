@@ -53,7 +53,7 @@ export default function ConsumerBrowsePage() {
       />
 
       {/* Filter Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-center">
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
         <div className="flex-1 w-full">
           <Input
             placeholder="Search offerings by keyword or provider name..."
@@ -63,11 +63,11 @@ export default function ConsumerBrowsePage() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 max-w-full scrollbar-thin shrink-0">
           <button
             type="button"
             onClick={() => setSelectedCat('')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
               !selectedCat
                 ? 'bg-indigo-600 text-white shadow-xs font-semibold'
                 : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200'
@@ -80,7 +80,7 @@ export default function ConsumerBrowsePage() {
               key={c.id}
               type="button"
               onClick={() => setSelectedCat(c.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                 selectedCat === c.id
                   ? 'bg-indigo-600 text-white shadow-xs font-semibold'
                   : 'bg-zinc-900 text-zinc-400 border border-zinc-800 hover:text-zinc-200'
@@ -94,7 +94,8 @@ export default function ConsumerBrowsePage() {
 
       {/* Results Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+          <CardSkeleton />
           <CardSkeleton />
           <CardSkeleton />
           <CardSkeleton />
@@ -106,7 +107,7 @@ export default function ConsumerBrowsePage() {
           description="There are currently no active listings matching your search or category criteria."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {cleanServices.map((svc: any) => {
             const isSungmo = svc.client_business_name === 'Sungmo Heals';
             const unitPrice = parseFloat(svc.price || '0');

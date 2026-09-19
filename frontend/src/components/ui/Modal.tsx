@@ -60,16 +60,16 @@ export function Modal({
       <div
         className={twMerge(
           clsx(
-            'relative bg-zinc-900 border border-zinc-800 rounded-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10 animate-in zoom-in-95 duration-150',
+            'relative bg-zinc-900 border border-zinc-800 rounded-2xl w-[calc(100%-1.5rem)] sm:w-full shadow-2xl overflow-hidden flex flex-col max-h-[90dvh] z-10 animate-in zoom-in-95 duration-150',
             widthClasses[maxWidth]
           )
         )}
       >
         {/* Header */}
         {(title || description) && (
-          <div className="px-6 py-4 border-b border-zinc-800 flex items-start justify-between gap-4 bg-zinc-900/90">
+          <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-zinc-800 flex items-start justify-between gap-4 bg-zinc-900/90">
             <div>
-              {title && <h3 className="text-base font-semibold text-zinc-100 tracking-tight">{title}</h3>}
+              {title && <h3 className="text-sm sm:text-base font-semibold text-zinc-100 tracking-tight">{title}</h3>}
               {description && <p className="text-xs text-zinc-400 mt-0.5">{description}</p>}
             </div>
             <button
@@ -83,7 +83,7 @@ export function Modal({
         )}
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto space-y-4 text-xs text-zinc-300">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-4 text-xs text-zinc-300">
           {children}
         </div>
 

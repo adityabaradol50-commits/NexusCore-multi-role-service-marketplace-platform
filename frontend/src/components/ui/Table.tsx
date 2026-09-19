@@ -6,8 +6,8 @@ import { twMerge } from 'tailwind-merge';
 
 export function Table({ children, className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-zinc-800/80 bg-zinc-900/40">
-      <table className={twMerge(clsx('w-full text-left border-collapse text-xs', className))} {...props}>
+    <div className="w-full max-w-full overflow-x-auto scrollbar-thin rounded-xl border border-zinc-800/80 bg-zinc-900/40">
+      <table className={twMerge(clsx('w-full text-left border-collapse text-xs min-w-[600px] sm:min-w-0', className))} {...props}>
         {children}
       </table>
     </div>
@@ -40,7 +40,7 @@ export function TableRow({ children, className, ...props }: React.HTMLAttributes
 
 export function TableHead({ children, className, ...props }: React.ThHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th className={twMerge(clsx('px-4 py-3 font-semibold text-zinc-400 select-none', className))} {...props}>
+    <th className={twMerge(clsx('px-4 py-3 font-semibold text-zinc-400 select-none whitespace-nowrap', className))} {...props}>
       {children}
     </th>
   );
@@ -48,8 +48,8 @@ export function TableHead({ children, className, ...props }: React.ThHTMLAttribu
 
 export function TableCell({ children, className, ...props }: React.TdHTMLAttributes<HTMLTableCellElement>) {
   return (
-    <th className={twMerge(clsx('px-4 py-3 align-middle font-normal text-zinc-300', className))} {...props}>
+    <td className={twMerge(clsx('px-4 py-3 align-middle font-normal text-zinc-300', className))} {...props}>
       {children}
-    </th>
+    </td>
   );
 }

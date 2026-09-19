@@ -40,7 +40,7 @@ export function PageHeader({
         </div>
         {description && <p className="text-xs text-zinc-400 leading-relaxed">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2.5 shrink-0">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2.5 shrink-0">{actions}</div>}
     </div>
   );
 }
