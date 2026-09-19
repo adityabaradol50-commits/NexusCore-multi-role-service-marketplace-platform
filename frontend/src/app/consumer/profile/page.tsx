@@ -7,6 +7,11 @@ import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
 import { User, MapPin, Save, Phone } from 'lucide-react';
 import { CardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function ConsumerProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -68,23 +73,23 @@ export default function ConsumerProfilePage() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Consumer Profile</h1>
-        <p className="text-xs text-slate-400 mt-1">Manage your personal contact information and delivery address for service bookings.</p>
-      </div>
+      <PageHeader
+        title="Account Profile"
+        description="Manage your personal contact details and service delivery address for booking requests."
+      />
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+      <Card className="p-6 sm:p-7 space-y-6">
         {/* Account Summary Header */}
-        <div className="flex items-center gap-4 pb-6 border-b border-slate-800">
-          <div className="w-14 h-14 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-lg text-indigo-400">
+        <div className="flex items-center gap-4 pb-6 border-b border-zinc-800">
+          <div className="w-12 h-12 rounded-xl bg-zinc-800 border border-zinc-700/60 flex items-center justify-center font-bold text-sm text-zinc-100">
             {user?.first_name?.charAt(0)}{user?.last_name?.charAt(0)}
           </div>
           <div>
-            <h2 className="text-base font-bold text-white">{user?.first_name} {user?.last_name}</h2>
-            <p className="text-xs text-slate-400">{user?.email}</p>
-            <span className="inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 uppercase tracking-wider">
-              CLIENT
-            </span>
+            <h2 className="text-base font-bold text-zinc-100">{user?.first_name} {user?.last_name}</h2>
+            <p className="text-xs text-zinc-400">{user?.email}</p>
+            <div className="mt-1">
+              <Badge variant="info" size="sm">CLIENT</Badge>
+            </div>
           </div>
         </div>
 
@@ -94,119 +99,88 @@ export default function ConsumerProfilePage() {
             e.preventDefault();
             updateProfileMutation.mutate();
           }}
-          className="space-y-6"
+          className="space-y-5"
         >
           {/* Personal Information */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-indigo-400" />
               <span>Personal Information</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">First Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="First name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Last Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Last name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+              <Input
+                label="First Name *"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <Input
+                label="Last Name *"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Phone Number</label>
-              <div className="relative">
-                <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="tel"
-                  placeholder="+1-555-0199"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            </div>
+            <Input
+              label="Phone Number"
+              type="tel"
+              placeholder="+1-555-0199"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              leftIcon={<Phone className="w-3.5 h-3.5 text-zinc-400" />}
+            />
           </div>
 
           {/* Service Address */}
-          <div className="space-y-4 pt-4 border-t border-slate-800">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="space-y-3 pt-4 border-t border-zinc-800">
+            <h3 className="text-xs font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-indigo-400" />
               <span>Default Service Address</span>
             </h3>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Street Address</label>
-              <input
-                type="text"
-                placeholder="e.g. 742 Evergreen Terrace"
-                value={addressLine1}
-                onChange={(e) => setAddressLine1(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-              />
-            </div>
+            <Input
+              label="Street Address"
+              placeholder="e.g. 742 Evergreen Terrace"
+              value={addressLine1}
+              onChange={(e) => setAddressLine1(e.target.value)}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">City</label>
-                <input
-                  type="text"
-                  placeholder="Springfield"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Postal Code</label>
-                <input
-                  type="text"
-                  placeholder="97477"
-                  value={postalCode}
-                  onChange={(e) => setPostalCode(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">Country</label>
-                <input
-                  type="text"
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
+              <Input
+                label="City"
+                placeholder="Springfield"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+              />
+              <Input
+                label="Postal Code"
+                placeholder="97477"
+                value={postalCode}
+                onChange={(e) => setPostalCode(e.target.value)}
+              />
+              <Input
+                label="Country"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+              />
             </div>
           </div>
 
-          <div className="pt-4 flex justify-end">
-            <button
+          <div className="pt-2 flex justify-end">
+            <Button
               type="submit"
-              disabled={updateProfileMutation.isPending}
-              className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold shadow-md flex items-center gap-2"
+              variant="primary"
+              size="md"
+              isLoading={updateProfileMutation.isPending}
+              leftIcon={<Save className="w-4 h-4" />}
             >
-              <Save className="w-3.5 h-3.5" />
-              <span>{updateProfileMutation.isPending ? 'Saving...' : 'Save Profile Changes'}</span>
-            </button>
+              Save Profile Changes
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
-

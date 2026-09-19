@@ -4,9 +4,15 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { ShoppingBag, Filter, ArrowUpRight, CheckCircle2, Clock, XCircle, AlertTriangle, Eye } from 'lucide-react';
+import { ShoppingBag, Eye, AlertTriangle } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Button } from '@/components/ui/Button';
+import { Input, Select } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Modal } from '@/components/ui/Modal';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 
 export default function AdminOrdersPage() {
   const queryClient = useQueryClient();
@@ -45,34 +51,26 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <ShoppingBag className="w-6 h-6 text-indigo-400" />
-            Global Orders & Requests Ledger
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Master overview of all transactions, consumer service bookings, and operational statuses.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-indigo-500"
-          >
-            <option value="">All Statuses</option>
-            <option value="PENDING">Pending</option>
-            <option value="ACCEPTED">Accepted</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-            <option value="CANCELLED">Cancelled</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-        </div>
-      </div>
+      <PageHeader
+        title="Global Master Orders Ledger"
+        description="Master overview of all transactions, consumer service bookings, and 10% platform fee calculations."
+        actions={
+          <div className="w-48">
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="">All Statuses</option>
+              <option value="PENDING">Pending</option>
+              <option value="ACCEPTED">Accepted</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="CANCELLED">Cancelled</option>
+              <option value="REJECTED">Rejected</option>
+            </Select>
+          </div>
+        }
+      />
 
       {isLoading ? (
         <TableSkeleton rows={6} />
@@ -83,154 +81,147 @@ export default function AdminOrdersPage() {
           description={statusFilter ? `No orders found with status "${statusFilter}".` : 'No orders have been recorded in the platform ledger yet.'}
         />
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px]">
-              <tr>
-                <th className="p-4">Order #</th>
-                <th className="p-4">Consumer</th>
-                <th className="p-4">Provider Business</th>
-                <th className="p-4">Gross Amount</th>
-                <th className="p-4">Fee (10%)</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {orders.map((o: any) => (
-                <tr key={o.id} className="hover:bg-slate-800/40">
-                  <td className="p-4 font-mono font-bold text-white">{o.order_number}</td>
-                  <td className="p-4">
-                    <div className="text-white font-medium">{o.consumer_name || 'Consumer'}</div>
-                    <div className="text-[11px] text-slate-400">{o.consumer_email}</div>
-                  </td>
-                  <td className="p-4 font-medium text-indigo-300">{o.client_business_name || 'Provider'}</td>
-                  <td className="p-4 font-bold text-white">${Number(o.total_amount).toFixed(2)}</td>
-                  <td className="p-4 font-semibold text-emerald-400">${Number(o.platform_fee).toFixed(2)}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                      o.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
-                      o.status === 'ACCEPTED' || o.status === 'IN_PROGRESS' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                      o.status === 'PENDING' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                      'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                    }`}>
-                      {o.status}
-                    </span>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => setSelectedOrder(o)}
-                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold"
-                    >
-                      Inspect Order
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Consumer</TableHead>
+              <TableHead>Provider Business</TableHead>
+              <TableHead>Gross Amount</TableHead>
+              <TableHead>Platform Fee (10%)</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((o: any) => (
+              <TableRow key={o.id} onClick={() => setSelectedOrder(o)} className="cursor-pointer">
+                <TableCell className="font-mono font-bold text-zinc-100">{o.order_number}</TableCell>
+                <TableCell>
+                  <div className="text-zinc-100 font-medium">{o.consumer_name || 'Consumer'}</div>
+                  <div className="text-[11px] text-zinc-400">{o.consumer_email}</div>
+                </TableCell>
+                <TableCell className="font-medium text-indigo-400">{o.client_business_name || 'Provider'}</TableCell>
+                <TableCell className="font-bold text-zinc-100">${Number(o.total_amount).toFixed(2)}</TableCell>
+                <TableCell className="font-bold text-emerald-400">${Number(o.platform_fee).toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge status={o.status} size="sm" />
+                </TableCell>
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    onClick={() => setSelectedOrder(o)}
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Eye className="w-3.5 h-3.5" />}
+                  >
+                    Inspect
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {/* Admin Order Inspector Modal */}
       {selectedOrder && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <span className="text-[10px] uppercase font-mono text-indigo-400 font-bold">Master Order Oversight</span>
-                <h3 className="text-lg font-bold text-white">Order #{selectedOrder.order_number}</h3>
-                <p className="text-xs text-slate-400">Created {new Date(selectedOrder.created_at).toLocaleString()}</p>
-              </div>
-              <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-white font-bold text-lg">✕</button>
-            </div>
-
-            <div className="space-y-3 text-xs text-slate-300">
-              <div className="grid grid-cols-2 gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-800">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Consumer</span>
-                  <strong className="text-white block">{selectedOrder.consumer_name || 'Consumer'}</strong>
-                  <span className="text-slate-400 text-[10px]">{selectedOrder.consumer_email}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">Provider Business</span>
-                  <strong className="text-indigo-300 block">{selectedOrder.client_business_name || 'Provider'}</strong>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="space-y-2">
-                <span className="text-slate-400 font-bold text-[11px] uppercase">Line Items</span>
-                {selectedOrder.items?.map((item: any) => (
-                  <div key={item.id} className="flex justify-between p-2.5 bg-slate-800/60 rounded-xl">
-                    <span>{item.item_title} (x{item.quantity})</span>
-                    <strong className="text-white">${(Number(item.unit_price) * item.quantity).toFixed(2)}</strong>
-                  </div>
-                ))}
-              </div>
-
-              {/* Financial Split */}
-              <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-800 space-y-1">
-                <div className="flex justify-between"><span>Gross Total:</span><strong className="text-white">${Number(selectedOrder.total_amount).toFixed(2)}</strong></div>
-                <div className="flex justify-between text-emerald-400"><span>Platform Fee (10%):</span><strong>${Number(selectedOrder.platform_fee).toFixed(2)}</strong></div>
-                <div className="flex justify-between text-slate-200"><span>Client Net Earnings (90%):</span><strong>${Number(selectedOrder.client_earnings).toFixed(2)}</strong></div>
-              </div>
-
-              {selectedOrder.rejection_reason && (
-                <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300">
-                  <strong>Cancellation/Rejection Reason:</strong> {selectedOrder.rejection_reason}
-                </div>
-              )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex justify-between items-center pt-2">
+        <Modal
+          isOpen={!!selectedOrder}
+          onClose={() => setSelectedOrder(null)}
+          title={`Order #${selectedOrder.order_number}`}
+          description={`Created ${new Date(selectedOrder.created_at).toLocaleString()}`}
+          maxWidth="lg"
+          footer={
+            <div className="flex items-center justify-between w-full">
               {selectedOrder.status !== 'CANCELLED' && selectedOrder.status !== 'COMPLETED' ? (
-                <button
+                <Button
                   onClick={() => setShowCancelDialog(true)}
-                  className="px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold rounded-xl"
+                  variant="danger"
+                  size="sm"
                 >
                   Admin Cancel Order
-                </button>
+                </Button>
               ) : (
                 <div />
               )}
-
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl"
-              >
+              <Button onClick={() => setSelectedOrder(null)} variant="secondary" size="sm">
                 Close
-              </button>
+              </Button>
             </div>
+          }
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 text-xs">
+              <div>
+                <span className="text-zinc-400 block text-[11px] font-medium">Consumer</span>
+                <strong className="text-zinc-100 block">{selectedOrder.consumer_name || 'Consumer'}</strong>
+                <span className="text-zinc-400 text-[11px]">{selectedOrder.consumer_email}</span>
+              </div>
+              <div>
+                <span className="text-zinc-400 block text-[11px] font-medium">Provider Business</span>
+                <strong className="text-indigo-400 block">{selectedOrder.client_business_name || 'Provider'}</strong>
+              </div>
+            </div>
+
+            {/* Line Items */}
+            <div className="space-y-1.5">
+              <span className="text-zinc-400 font-medium text-[11px] uppercase tracking-wider">Line Items</span>
+              {selectedOrder.items?.map((item: any) => (
+                <div key={item.id} className="flex justify-between p-2.5 bg-zinc-950 rounded-xl text-xs border border-zinc-800">
+                  <span className="text-zinc-200">{item.item_title} (x{item.quantity})</span>
+                  <strong className="text-zinc-100">${(Number(item.unit_price) * item.quantity).toFixed(2)}</strong>
+                </div>
+              ))}
+            </div>
+
+            {/* Financial Split */}
+            <div className="bg-zinc-950 p-3.5 rounded-xl border border-zinc-800 space-y-1.5 text-xs">
+              <div className="flex justify-between text-zinc-400">
+                <span>Gross Total Amount:</span>
+                <strong className="text-zinc-100">${Number(selectedOrder.total_amount).toFixed(2)}</strong>
+              </div>
+              <div className="flex justify-between text-emerald-400">
+                <span>Platform Take (10%):</span>
+                <strong>${Number(selectedOrder.platform_fee).toFixed(2)}</strong>
+              </div>
+              <div className="flex justify-between text-zinc-200 pt-1.5 border-t border-zinc-800">
+                <span>Client Net Share (90%):</span>
+                <strong className="text-emerald-400">${Number(selectedOrder.client_earnings).toFixed(2)}</strong>
+              </div>
+            </div>
+
+            {selectedOrder.rejection_reason && (
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs">
+                <strong>Reason for Status:</strong> {selectedOrder.rejection_reason}
+              </div>
+            )}
 
             {/* Cancel confirmation inner box */}
             {showCancelDialog && (
-              <div className="mt-4 p-4 bg-slate-800 border border-slate-700 rounded-xl space-y-3">
-                <h4 className="text-xs font-bold text-rose-400 flex items-center gap-1">
-                  <AlertTriangle className="w-4 h-4" /> Confirm Administrative Cancellation
-                </h4>
-                <input
-                  type="text"
-                  placeholder="Reason for administrative intervention..."
+              <div className="p-3.5 bg-rose-950/40 border border-rose-500/30 rounded-xl space-y-3">
+                <Input
+                  label="Administrative Intervention Reason *"
+                  placeholder="Reason for administrative cancellation..."
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500"
                 />
                 <div className="flex justify-end gap-2">
-                  <button onClick={() => setShowCancelDialog(false)} className="px-3 py-1 text-xs text-slate-400">Cancel</button>
-                  <button
+                  <Button onClick={() => setShowCancelDialog(false)} variant="secondary" size="sm">
+                    Cancel
+                  </Button>
+                  <Button
                     onClick={() => cancelOrderMutation.mutate({ orderId: selectedOrder.id, reason: cancelReason })}
-                    disabled={cancelOrderMutation.isPending}
-                    className="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-lg"
+                    isLoading={cancelOrderMutation.isPending}
+                    variant="danger"
+                    size="sm"
                   >
-                    Confirm Order Cancellation
-                  </button>
+                    Confirm Cancellation
+                  </Button>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

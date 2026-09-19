@@ -5,8 +5,13 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
-import { Building, Save, ShieldCheck, Clock, XCircle, User, Phone, Mail } from 'lucide-react';
+import { Building, Save, User, Phone } from 'lucide-react';
 import { CardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Button } from '@/components/ui/Button';
+import { Input, Textarea } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function ClientProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -70,62 +75,39 @@ export default function ClientProfilePage() {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Business Profile</h1>
-        <p className="text-xs text-slate-400 mt-1">Manage public provider details, company registration numbers, contact person details, and service coverage.</p>
-      </div>
+      <PageHeader
+        title="Business Profile & Settings"
+        description="Manage public provider details, company registration identifiers, contact representative, and service coverage."
+        badgeText={approvalStatus}
+        badgeVariant={approvalStatus === 'APPROVED' ? 'success' : approvalStatus === 'REJECTED' ? 'danger' : 'warning'}
+      />
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-6 shadow-xl">
+      <Card className="p-6 sm:p-7 space-y-6">
         {/* Business Header Preview */}
-        <div className="flex items-center gap-4 pb-6 border-b border-slate-800">
+        <div className="flex items-center gap-4 pb-6 border-b border-zinc-800">
           {profile?.logo_url ? (
             <img
               src={profile.logo_url}
               alt={profile.business_name || 'Business Logo'}
-              className="w-16 h-16 rounded-2xl object-contain bg-white/10 p-2 border border-emerald-500/30 shadow-lg"
+              className="w-14 h-14 rounded-xl object-contain bg-zinc-800 p-1.5 border border-zinc-700/60 shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-2xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center font-bold text-xl shadow-lg">
-              <Building className="w-8 h-8" />
+            <div className="w-14 h-14 rounded-xl bg-zinc-800 text-zinc-300 border border-zinc-700/60 flex items-center justify-center font-bold text-xl shrink-0">
+              <Building className="w-7 h-7" />
             </div>
           )}
           <div>
-            <h2 className="text-xl font-bold text-white">{profile?.business_name || 'My Business'}</h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <h2 className="text-base font-bold text-zinc-100">{profile?.business_name || 'My Business'}</h2>
+            <p className="text-xs text-zinc-400 mt-0.5">
               Owner: {profile?.first_name || user?.first_name} {profile?.last_name || user?.last_name}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                OWNER
-              </span>
+              <Badge variant="success" size="sm">OWNER</Badge>
               {profile?.service_area && (
-                <span className="text-[10px] text-slate-300 font-medium bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                  {profile.service_area}
-                </span>
+                <Badge variant="neutral" size="sm">{profile.service_area}</Badge>
               )}
             </div>
           </div>
-        </div>
-
-        {/* Verification Status Card */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-          <div>
-            <span className="text-xs text-slate-400 block font-medium">Administrative Vetting Status</span>
-            <span className={`text-sm font-bold mt-1 inline-flex items-center gap-1.5 ${
-              approvalStatus === 'APPROVED' ? 'text-emerald-400' :
-              approvalStatus === 'PENDING_APPROVAL' ? 'text-amber-400' :
-              'text-rose-400'
-            }`}>
-              {approvalStatus === 'APPROVED' && <ShieldCheck className="w-4 h-4" />}
-              {approvalStatus === 'PENDING_APPROVAL' && <Clock className="w-4 h-4" />}
-              {approvalStatus === 'REJECTED' && <XCircle className="w-4 h-4" />}
-              <span>{approvalStatus}</span>
-            </span>
-          </div>
-
-          <span className="text-[11px] text-slate-400 max-w-xs text-left sm:text-right">
-            {approvalStatus === 'APPROVED' ? 'All business catalog operations unlocked.' : 'Vetting required before offerings become publicly searchable.'}
-          </span>
         </div>
 
         {/* Business Edit Form */}
@@ -134,119 +116,91 @@ export default function ClientProfilePage() {
             e.preventDefault();
             updateProfileMutation.mutate();
           }}
-          className="space-y-6"
+          className="space-y-5"
         >
           {/* Contact Person */}
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-emerald-400" />
+          <div className="space-y-3">
+            <h3 className="text-xs font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-indigo-400" />
               <span>Contact Representative</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">First Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Last Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
+              <Input
+                label="First Name *"
+                required
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+              />
+              <Input
+                label="Last Name *"
+                required
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+              />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Contact Phone</label>
-              <div className="relative">
-                <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="tel"
-                  placeholder="+1-555-8888"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
+            <Input
+              label="Contact Phone"
+              type="tel"
+              placeholder="+1-555-8888"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              leftIcon={<Phone className="w-3.5 h-3.5 text-zinc-400" />}
+            />
           </div>
 
           {/* Business Details */}
-          <div className="space-y-4 pt-4 border-t border-slate-800">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="space-y-3 pt-4 border-t border-zinc-800">
+            <h3 className="text-xs font-semibold text-zinc-100 uppercase tracking-wider flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-emerald-400" />
               <span>Company Information</span>
             </h3>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Business Name *</label>
-              <input
-                type="text"
-                required
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
+            <Input
+              label="Business Name *"
+              required
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                label="Registration / Tax Identifier"
+                placeholder="e.g. REG-984728"
+                value={businessRegNo}
+                onChange={(e) => setBusinessRegNo(e.target.value)}
+              />
+              <Input
+                label="Service Coverage Area"
+                placeholder="e.g. Global / Remote or California"
+                value={serviceArea}
+                onChange={(e) => setServiceArea(e.target.value)}
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Registration / Tax Identifier</label>
-                <input
-                  type="text"
-                  placeholder="e.g. REG-984728"
-                  value={businessRegNo}
-                  onChange={(e) => setBusinessRegNo(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">Service Coverage Area</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Global / Remote or California"
-                  value={serviceArea}
-                  onChange={(e) => setServiceArea(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">Company Overview & Bio</label>
-              <textarea
-                rows={4}
-                placeholder="Describe your capabilities, history, and domain expertise..."
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:border-emerald-500 leading-relaxed"
-              />
-            </div>
+            <Textarea
+              label="Company Overview & Bio"
+              rows={4}
+              placeholder="Describe your capabilities, history, and domain expertise..."
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+            />
           </div>
 
-          <div className="pt-4 flex justify-end">
-            <button
+          <div className="pt-2 flex justify-end">
+            <Button
               type="submit"
-              disabled={updateProfileMutation.isPending}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-md flex items-center gap-2"
+              variant="primary"
+              size="md"
+              isLoading={updateProfileMutation.isPending}
+              leftIcon={<Save className="w-4 h-4" />}
             >
-              <Save className="w-3.5 h-3.5" />
-              <span>{updateProfileMutation.isPending ? 'Saving...' : 'Update Business Profile'}</span>
-            </button>
+              Update Business Profile
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
-

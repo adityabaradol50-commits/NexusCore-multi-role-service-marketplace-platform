@@ -4,9 +4,12 @@ import React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { Bell, CheckCheck, Clock, ExternalLink } from 'lucide-react';
+import { Bell, CheckCheck, Clock } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function AdminNotificationsPage() {
   const queryClient = useQueryClient();
@@ -43,28 +46,23 @@ export default function AdminNotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Bell className="w-6 h-6 text-indigo-400" />
-            Administrative System Notifications
-          </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time security notifications, client onboarding alerts, and operational updates.
-          </p>
-        </div>
-
-        {unreadCount > 0 && (
-          <button
-            onClick={() => markAllReadMutation.mutate()}
-            disabled={markAllReadMutation.isPending}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-indigo-300 rounded-xl border border-indigo-500/30 flex items-center gap-2 transition-all self-start sm:self-auto"
-          >
-            <CheckCheck className="w-4 h-4" />
-            Mark All as Read ({unreadCount})
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Administrative System Notifications"
+        description="Real-time security notifications, client onboarding alerts, and operational updates."
+        actions={
+          unreadCount > 0 ? (
+            <Button
+              onClick={() => markAllReadMutation.mutate()}
+              isLoading={markAllReadMutation.isPending}
+              variant="outline"
+              size="sm"
+              leftIcon={<CheckCheck className="w-4 h-4" />}
+            >
+              Mark All as Read ({unreadCount})
+            </Button>
+          ) : undefined
+        }
+      />
 
       {isLoading ? (
         <TableSkeleton rows={4} />
@@ -77,40 +75,40 @@ export default function AdminNotificationsPage() {
       ) : (
         <div className="space-y-3">
           {notifications.map((n: any) => (
-            <div
+            <Card
               key={n.id}
-              className={`p-4 rounded-2xl border transition-all ${
-                !n.is_read
-                  ? 'bg-slate-900 border-indigo-500/30 shadow-lg'
-                  : 'bg-slate-900/40 border-slate-800/80 opacity-80'
+              hoverEffect
+              className={`p-4 transition-all ${
+                !n.is_read ? 'bg-zinc-900 border-indigo-500/30' : 'bg-zinc-900/40 border-zinc-800/80 opacity-80'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     {!n.is_read && (
-                      <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse" />
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 shrink-0" />
                     )}
-                    <h3 className="text-sm font-bold text-white">{n.title}</h3>
+                    <h3 className="text-xs font-semibold text-zinc-100">{n.title}</h3>
                   </div>
-                  <p className="text-xs text-slate-300">{n.message}</p>
-                  <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1">
+                  <p className="text-xs text-zinc-300 leading-relaxed">{n.message}</p>
+                  <div className="flex items-center gap-3 text-[11px] text-zinc-400 pt-1">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {new Date(n.created_at).toLocaleString()}
+                      <Clock className="w-3 h-3 text-zinc-400" /> {new Date(n.created_at).toLocaleString()}
                     </span>
                   </div>
                 </div>
 
                 {!n.is_read && (
-                  <button
+                  <Button
                     onClick={() => markReadMutation.mutate(n.id)}
-                    className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[11px] text-slate-300 rounded-lg shrink-0"
+                    variant="secondary"
+                    size="sm"
                   >
                     Mark read
-                  </button>
+                  </Button>
                 )}
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}

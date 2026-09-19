@@ -7,6 +7,9 @@ import { api } from '@/lib/api';
 import { Bell, Check, CheckCheck, ExternalLink } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function ConsumerNotificationsPage() {
   const queryClient = useQueryClient();
@@ -42,22 +45,23 @@ export default function ConsumerNotificationsPage() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Notifications & Alerts</h1>
-          <p className="text-xs text-slate-400 mt-1">Real-time status notifications for your bookings and platform messages.</p>
-        </div>
-        {unreadCount > 0 && (
-          <button
-            onClick={() => markAllReadMutation.mutate()}
-            disabled={markAllReadMutation.isPending}
-            className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-indigo-400 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
-          >
-            <CheckCheck className="w-4 h-4" />
-            <span>Mark All as Read ({unreadCount})</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Notifications & Activity Feed"
+        description="Real-time status updates for your bookings, order acceptances, and platform notifications."
+        actions={
+          unreadCount > 0 ? (
+            <Button
+              onClick={() => markAllReadMutation.mutate()}
+              isLoading={markAllReadMutation.isPending}
+              variant="outline"
+              size="sm"
+              leftIcon={<CheckCheck className="w-4 h-4" />}
+            >
+              Mark All Read ({unreadCount})
+            </Button>
+          ) : undefined
+        }
+      />
 
       {isLoading ? (
         <TableSkeleton rows={4} />
@@ -70,30 +74,29 @@ export default function ConsumerNotificationsPage() {
       ) : (
         <div className="space-y-3">
           {notifications.map((notif: any) => (
-            <div
+            <Card
               key={notif.id}
-              className={`p-4 rounded-xl border transition-all flex justify-between items-start gap-4 ${
-                notif.is_read
-                  ? 'bg-slate-900/50 border-slate-800/80 text-slate-400'
-                  : 'bg-slate-900 border-indigo-500/30 text-slate-200 shadow-md'
+              hoverEffect
+              className={`p-4 flex justify-between items-start gap-4 ${
+                notif.is_read ? 'bg-zinc-900/40 border-zinc-800/80 text-zinc-400' : 'bg-zinc-900 border-indigo-500/30 text-zinc-100'
               }`}
             >
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-xs text-white">{notif.title}</span>
+                  <span className="font-semibold text-xs text-zinc-100">{notif.title}</span>
                   {!notif.is_read && (
-                    <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
                   )}
                 </div>
-                <p className="text-xs leading-relaxed">{notif.message}</p>
+                <p className="text-xs text-zinc-300 leading-relaxed">{notif.message}</p>
                 <div className="flex items-center gap-3 pt-1">
-                  <span className="text-[10px] text-slate-500">{new Date(notif.created_at).toLocaleString()}</span>
+                  <span className="text-[10px] text-zinc-400">{new Date(notif.created_at).toLocaleString()}</span>
                   {notif.link && (
                     <Link
                       href={notif.link.startsWith('/') ? notif.link : '/consumer/orders'}
-                      className="text-[11px] text-indigo-400 hover:underline flex items-center gap-1 font-semibold"
+                      className="text-[11px] text-indigo-400 hover:underline flex items-center gap-1 font-medium"
                     >
-                      <span>View Related Item</span>
+                      <span>View Related Order</span>
                       <ExternalLink className="w-3 h-3" />
                     </Link>
                   )}
@@ -101,19 +104,18 @@ export default function ConsumerNotificationsPage() {
               </div>
 
               {!notif.is_read && (
-                <button
+                <Button
                   onClick={() => markReadMutation.mutate(notif.id)}
-                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs shrink-0"
-                  title="Mark as read"
+                  variant="secondary"
+                  size="sm"
                 >
                   <Check className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               )}
-            </div>
+            </Card>
           ))}
         </div>
       )}
     </div>
   );
 }
-

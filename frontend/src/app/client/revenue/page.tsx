@@ -3,8 +3,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { TrendingUp, DollarSign, ArrowUpRight, ShieldCheck } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { CardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { StatCard } from '@/components/ui/StatCard';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function ClientRevenuePage() {
   const { data: analytics, isLoading } = useQuery({
@@ -25,36 +28,44 @@ export default function ClientRevenuePage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Revenue & Financial Statements</h1>
-        <p className="text-xs text-slate-400 mt-1">Detailed breakdown of gross earnings, platform commission deductions, and net payout balances.</p>
+      <PageHeader
+        title="Revenue & Financial Ledger"
+        description="Detailed breakdown of gross earnings, platform commission deductions, and net payout balances."
+        badgeText="90% Owner Earnings Share"
+        badgeVariant="success"
+      />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <StatCard
+          title="Withdrawable Available Balance"
+          value={`$${available.toFixed(2)}`}
+          subtitle="Credited automatically upon completing bookings"
+          changeType="positive"
+          icon={<ShieldCheck className="w-4 h-4 text-emerald-400" />}
+          iconBg="bg-emerald-500/10 border-emerald-500/20"
+        />
+
+        <StatCard
+          title="Cumulative Net Revenue"
+          value={`$${lifetime.toFixed(2)}`}
+          subtitle={`Across ${completed} completed customer contracts`}
+          changeType="positive"
+          icon={<ShieldCheck className="w-4 h-4 text-indigo-400" />}
+          iconBg="bg-indigo-500/10 border-indigo-500/20"
+        />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Withdrawable Available Balance</span>
-          <p className="text-3xl font-extrabold text-emerald-400">${available.toFixed(2)}</p>
-          <p className="text-xs text-slate-500">Credited automatically upon marking bookings as completed.</p>
-        </div>
-
-        <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
-          <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Cumulative Net Revenue</span>
-          <p className="text-3xl font-extrabold text-indigo-400">${lifetime.toFixed(2)}</p>
-          <p className="text-xs text-slate-500">Across {completed} completed customer contracts.</p>
-        </div>
-      </div>
-
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+      <Card className="p-6 space-y-3">
+        <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           <span>Platform Commission & Fee Structure</span>
         </h3>
-        <div className="text-xs text-slate-300 space-y-2">
+        <div className="text-xs text-zinc-400 space-y-2 leading-relaxed">
           <p>• Standard Marketplace Commission: <strong>10.0%</strong> deducted automatically at transaction completion.</p>
           <p>• Provider Net Share: <strong>90.0%</strong> directly deposited into business available balance.</p>
           <p>• Processing Speed: Real-time atomic database balance updates with transaction rollback protection.</p>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

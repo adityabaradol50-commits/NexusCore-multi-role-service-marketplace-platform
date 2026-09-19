@@ -4,21 +4,26 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { ShoppingBag, Eye, Star } from 'lucide-react';
+import { ShoppingBag, Eye } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import OrderDetailModal from '@/components/consumer/OrderDetailModal';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Tabs } from '@/components/ui/Tabs';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 
 function ConsumerOrdersContent() {
   const searchParams = useSearchParams();
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['consumerOrdersPage', statusFilter],
     queryFn: async () => {
-      const params = statusFilter ? { status_filter: statusFilter } : {};
+      const params = statusFilter !== 'ALL' ? { status_filter: statusFilter } : {};
       const res = await api.get('/consumer/orders', { params });
       return res.data;
     },
@@ -41,31 +46,28 @@ function ConsumerOrdersContent() {
     setIsDetailOpen(true);
   };
 
-  const statuses = ['ALL', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'];
+  const tabs = [
+    { id: 'ALL', label: 'All Orders' },
+    { id: 'PENDING', label: 'Pending' },
+    { id: 'ACCEPTED', label: 'Accepted' },
+    { id: 'IN_PROGRESS', label: 'In Progress' },
+    { id: 'COMPLETED', label: 'Completed' },
+    { id: 'CANCELLED', label: 'Cancelled' },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Orders & Booking Requests</h1>
-        <p className="text-xs text-slate-400 mt-1">Track the fulfillment progress, status updates, and transaction receipts of your bookings.</p>
-      </div>
+      <PageHeader
+        title="Orders & Booking Requests"
+        description="Track fulfillment progress, status updates, and transaction receipts for your bookings."
+      />
 
       {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {statuses.map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s === 'ALL' ? '' : s)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              (s === 'ALL' && !statusFilter) || statusFilter === s
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        tabs={tabs}
+        activeTab={statusFilter}
+        onChange={(tabId) => setStatusFilter(tabId)}
+      />
 
       {/* Content */}
       {isLoading ? (
@@ -74,61 +76,50 @@ function ConsumerOrdersContent() {
         <EmptyState
           icon={ShoppingBag}
           title="No requests found"
-          description={statusFilter ? `You do not have any orders with status '${statusFilter}'.` : "You have not placed any booking requests yet."}
+          description={statusFilter !== 'ALL' ? `You do not have any orders with status '${statusFilter}'.` : "You have not placed any booking requests yet."}
         />
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
-                <tr>
-                  <th className="p-4">Order #</th>
-                  <th className="p-4">Offering Title</th>
-                  <th className="p-4">Provider</th>
-                  <th className="p-4">Total</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Date</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {orders.map((ord: any) => (
-                  <tr
-                    key={ord.id}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Offering Title</TableHead>
+              <TableHead>Provider</TableHead>
+              <TableHead>Total Amount</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((ord: any) => (
+              <TableRow
+                key={ord.id}
+                onClick={() => handleOpenDetail(ord)}
+                className="cursor-pointer"
+              >
+                <TableCell className="font-mono font-bold text-zinc-100">{ord.order_number}</TableCell>
+                <TableCell className="font-medium text-zinc-200">{ord.items?.[0]?.item_title || 'Service Offering'}</TableCell>
+                <TableCell className="text-indigo-400 font-medium">{ord.client_business_name}</TableCell>
+                <TableCell className="font-bold text-emerald-400">${parseFloat(ord.total_amount).toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge status={ord.status} size="sm" />
+                </TableCell>
+                <TableCell className="text-zinc-400">{new Date(ord.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <Button
                     onClick={() => handleOpenDetail(ord)}
-                    className="hover:bg-slate-800/40 cursor-pointer transition-colors"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Eye className="w-3.5 h-3.5" />}
                   >
-                    <td className="p-4 font-mono font-bold text-white">{ord.order_number}</td>
-                    <td className="p-4 font-medium text-slate-200">{ord.items?.[0]?.item_title || 'Service Offering'}</td>
-                    <td className="p-4 text-indigo-400">{ord.client_business_name}</td>
-                    <td className="p-4 font-bold text-emerald-400">${parseFloat(ord.total_amount).toFixed(2)}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        ord.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                        ord.status === 'ACCEPTED' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                        ord.status === 'IN_PROGRESS' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                        ord.status === 'REJECTED' || ord.status === 'CANCELLED' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-                        'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                      }`}>
-                        {ord.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-slate-400">{new Date(ord.created_at).toLocaleDateString()}</td>
-                    <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => handleOpenDetail(ord)}
-                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded-lg text-xs font-semibold flex items-center gap-1.5 ml-auto transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    View
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {/* Order Detail Modal */}
@@ -156,4 +147,3 @@ export default function ConsumerOrdersPage() {
     </Suspense>
   );
 }
-

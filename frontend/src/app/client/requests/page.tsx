@@ -5,24 +5,29 @@ import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/context/ToastContext';
 import { api } from '@/lib/api';
-import { Inbox, Check, X, CheckCircle2, Eye } from 'lucide-react';
+import { Inbox, Eye } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
 import ClientOrderDetailModal from '@/components/client/ClientOrderDetailModal';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Tabs } from '@/components/ui/Tabs';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 
 function ClientRequestsContent() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
 
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const { data: orders = [], isLoading, refetch } = useQuery({
     queryKey: ['clientOrdersRequests', statusFilter],
     queryFn: async () => {
-      const params = statusFilter ? { status_filter: statusFilter } : {};
+      const params = statusFilter !== 'ALL' ? { status_filter: statusFilter } : {};
       const res = await api.get('/client/orders', { params });
       return res.data;
     },
@@ -59,30 +64,28 @@ function ClientRequestsContent() {
     },
   });
 
-  const statuses = ['ALL', 'PENDING', 'ACCEPTED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'];
+  const tabs = [
+    { id: 'ALL', label: 'All Requests' },
+    { id: 'PENDING', label: 'Pending' },
+    { id: 'ACCEPTED', label: 'Accepted' },
+    { id: 'IN_PROGRESS', label: 'In Progress' },
+    { id: 'COMPLETED', label: 'Completed' },
+    { id: 'REJECTED', label: 'Rejected' },
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Consumer Requests & Bookings</h1>
-        <p className="text-xs text-slate-400 mt-1">Review incoming booking requests, accept orders, and mark completions to release payouts.</p>
-      </div>
+      <PageHeader
+        title="Consumer Requests & Bookings"
+        description="Review incoming requests, update order status, and complete fulfillments to release 90% net earnings."
+      />
 
-      <div className="flex flex-wrap gap-2">
-        {statuses.map((s) => (
-          <button
-            key={s}
-            onClick={() => setStatusFilter(s === 'ALL' ? '' : s)}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              (s === 'ALL' && !statusFilter) || statusFilter === s
-                ? 'bg-emerald-600 text-white'
-                : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
-            }`}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
+      {/* Tabs */}
+      <Tabs
+        tabs={tabs}
+        activeTab={statusFilter}
+        onChange={(tabId) => setStatusFilter(tabId)}
+      />
 
       {isLoading ? (
         <TableSkeleton rows={4} />
@@ -90,99 +93,92 @@ function ClientRequestsContent() {
         <EmptyState
           icon={Inbox}
           title="No customer requests"
-          description={statusFilter ? `No bookings with status '${statusFilter}'.` : "You haven't received any customer requests yet."}
+          description={statusFilter !== 'ALL' ? `No bookings with status '${statusFilter}'.` : "You haven't received any customer requests yet."}
         />
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
-                <tr>
-                  <th className="p-4">Order #</th>
-                  <th className="p-4">Customer</th>
-                  <th className="p-4">Offering</th>
-                  <th className="p-4">Net Payout</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800">
-                {orders.map((ord: any) => (
-                  <tr
-                    key={ord.id}
-                    onClick={() => handleOpenDetail(ord)}
-                    className="hover:bg-slate-800/40 cursor-pointer transition-colors"
-                  >
-                    <td className="p-4 font-mono font-bold text-white">{ord.order_number}</td>
-                    <td className="p-4">
-                      <p className="font-semibold text-white">{ord.consumer_name}</p>
-                      <p className="text-[11px] text-slate-400">{ord.consumer_email}</p>
-                    </td>
-                    <td className="p-4 text-slate-200">{ord.items?.[0]?.item_title || 'Custom Offering'}</td>
-                    <td className="p-4 font-bold text-emerald-400">${parseFloat(ord.client_earnings).toFixed(2)}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        ord.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-                        ord.status === 'ACCEPTED' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                        ord.status === 'IN_PROGRESS' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-                        ord.status === 'REJECTED' || ord.status === 'CANCELLED' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-                        'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                      }`}>
-                        {ord.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-right" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenDetail(ord)}
-                          className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-indigo-300 rounded text-xs font-semibold flex items-center gap-1"
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Order #</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Offering</TableHead>
+              <TableHead>90% Net Payout</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((ord: any) => (
+              <TableRow
+                key={ord.id}
+                onClick={() => handleOpenDetail(ord)}
+                className="cursor-pointer"
+              >
+                <TableCell className="font-mono font-bold text-zinc-100">{ord.order_number}</TableCell>
+                <TableCell>
+                  <p className="font-medium text-zinc-100">{ord.consumer_name}</p>
+                  <p className="text-[11px] text-zinc-400">{ord.consumer_email}</p>
+                </TableCell>
+                <TableCell className="text-zinc-200">{ord.items?.[0]?.item_title || 'Custom Offering'}</TableCell>
+                <TableCell className="font-bold text-emerald-400">${parseFloat(ord.client_earnings).toFixed(2)}</TableCell>
+                <TableCell>
+                  <Badge status={ord.status} size="sm" />
+                </TableCell>
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button
+                      onClick={() => handleOpenDetail(ord)}
+                      variant="outline"
+                      size="sm"
+                      leftIcon={<Eye className="w-3.5 h-3.5" />}
+                    >
+                      Inspect
+                    </Button>
+
+                    {ord.status === 'PENDING' && (
+                      <>
+                        <Button
+                          onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'ACCEPTED' })}
+                          variant="primary"
+                          size="sm"
                         >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>Details</span>
-                        </button>
+                          Accept
+                        </Button>
+                        <Button
+                          onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'REJECTED' })}
+                          variant="danger"
+                          size="sm"
+                        >
+                          Decline
+                        </Button>
+                      </>
+                    )}
 
-                        {ord.status === 'PENDING' && (
-                          <>
-                            <button
-                              onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'ACCEPTED' })}
-                              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold"
-                            >
-                              Accept
-                            </button>
-                            <button
-                              onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'REJECTED' })}
-                              className="px-2.5 py-1 bg-slate-800 hover:bg-rose-900 text-slate-300 rounded text-xs font-semibold"
-                            >
-                              Decline
-                            </button>
-                          </>
-                        )}
+                    {ord.status === 'ACCEPTED' && (
+                      <Button
+                        onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'IN_PROGRESS' })}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        Start Session
+                      </Button>
+                    )}
 
-                        {ord.status === 'ACCEPTED' && (
-                          <button
-                            onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'IN_PROGRESS' })}
-                            className="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-semibold"
-                          >
-                            Start
-                          </button>
-                        )}
-
-                        {ord.status === 'IN_PROGRESS' && (
-                          <button
-                            onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'COMPLETED' })}
-                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold"
-                          >
-                            Complete
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                    {ord.status === 'IN_PROGRESS' && (
+                      <Button
+                        onClick={() => updateStatusMutation.mutate({ orderId: ord.id, status: 'COMPLETED' })}
+                        variant="success"
+                        size="sm"
+                      >
+                        Complete Order
+                      </Button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {/* Client Order Detail Modal */}
@@ -211,4 +207,3 @@ export default function ClientRequestsPage() {
     </Suspense>
   );
 }
-

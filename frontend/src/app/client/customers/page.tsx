@@ -3,9 +3,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { Users, Mail, Phone, Calendar } from 'lucide-react';
+import { Users } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 
 export default function ClientCustomersPage() {
   const { data: customers = [], isLoading } = useQuery({
@@ -18,10 +20,10 @@ export default function ClientCustomersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white">Customer Directory</h1>
-        <p className="text-xs text-slate-400 mt-1">Verified consumers who have placed booking orders with your business.</p>
-      </div>
+      <PageHeader
+        title="Customer Directory"
+        description="Verified consumers who have placed booking orders with your business."
+      />
 
       {isLoading ? (
         <TableSkeleton rows={3} />
@@ -32,34 +34,31 @@ export default function ClientCustomersPage() {
           description="Customer contact information will automatically appear here as consumers book your offerings."
         />
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px]">
-              <tr>
-                <th className="p-4">Customer Name</th>
-                <th className="p-4">Email Address</th>
-                <th className="p-4">Contact Phone</th>
-                <th className="p-4">Total Orders</th>
-                <th className="p-4">Total Value</th>
-                <th className="p-4 text-right">Last Engaged</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {customers.map((c: any) => (
-                <tr key={c.id} className="hover:bg-slate-800/40">
-                  <td className="p-4 font-bold text-white">{c.name}</td>
-                  <td className="p-4 text-indigo-400 font-medium">{c.email}</td>
-                  <td className="p-4 text-slate-300">{c.phone || 'N/A'}</td>
-                  <td className="p-4 font-semibold">{c.total_orders} {c.total_orders === 1 ? 'booking' : 'bookings'}</td>
-                  <td className="p-4 font-bold text-emerald-400">${parseFloat(c.total_spent).toFixed(2)}</td>
-                  <td className="p-4 text-right text-slate-400">{new Date(c.last_order_date).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Customer Name</TableHead>
+              <TableHead>Email Address</TableHead>
+              <TableHead>Contact Phone</TableHead>
+              <TableHead>Total Orders</TableHead>
+              <TableHead>Total Value</TableHead>
+              <TableHead className="text-right">Last Engaged</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {customers.map((c: any) => (
+              <TableRow key={c.id}>
+                <TableCell className="font-bold text-zinc-100">{c.name}</TableCell>
+                <TableCell className="text-indigo-400 font-medium">{c.email}</TableCell>
+                <TableCell className="text-zinc-300">{c.phone || 'N/A'}</TableCell>
+                <TableCell className="font-medium">{c.total_orders} {c.total_orders === 1 ? 'booking' : 'bookings'}</TableCell>
+                <TableCell className="font-bold text-emerald-400">${parseFloat(c.total_spent).toFixed(2)}</TableCell>
+                <TableCell className="text-right text-zinc-400">{new Date(c.last_order_date).toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );
 }
-

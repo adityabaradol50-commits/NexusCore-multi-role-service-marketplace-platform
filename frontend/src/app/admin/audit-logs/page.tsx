@@ -3,9 +3,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import { FileText, Shield, User, Clock, Terminal } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import EmptyState from '@/components/ui/EmptyState';
 import { TableSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Badge } from '@/components/ui/Badge';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table';
 
 export default function AdminAuditLogsPage() {
   const { data: logs = [], isLoading } = useQuery({
@@ -18,15 +21,12 @@ export default function AdminAuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FileText className="w-6 h-6 text-indigo-400" />
-          Platform Audit Logs
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Immutable event stream capturing administrative actions, provider approvals, and status transitions.
-        </p>
-      </div>
+      <PageHeader
+        title="Platform Audit Logs & Trail"
+        description="Immutable event stream capturing administrative actions, provider approvals, and system state transitions."
+        badgeText="Security Log"
+        badgeVariant="primary"
+      />
 
       {isLoading ? (
         <TableSkeleton rows={6} />
@@ -37,42 +37,40 @@ export default function AdminAuditLogsPage() {
           description="Administrative mutations and approval actions will be recorded here."
         />
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="bg-slate-800/80 text-slate-400 uppercase font-bold text-[10px]">
-              <tr>
-                <th className="p-4">Timestamp</th>
-                <th className="p-4">Action</th>
-                <th className="p-4">Actor</th>
-                <th className="p-4">Target Entity</th>
-                <th className="p-4">Details / Metadata</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {logs.map((log: any) => (
-                <tr key={log.id} className="hover:bg-slate-800/40 font-mono text-[11px]">
-                  <td className="p-4 text-slate-400">
-                    {new Date(log.created_at).toLocaleString()}
-                  </td>
-                  <td className="p-4">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                      {log.action}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-200">
-                    {log.actor_email || log.actor_id?.slice(0, 8) || 'System'}
-                  </td>
-                  <td className="p-4 text-slate-300">
-                    {log.target_entity} ({log.target_id?.slice(0, 8)})
-                  </td>
-                  <td className="p-4 text-slate-400 max-w-xs truncate">
-                    {log.details ? JSON.stringify(log.details) : '—'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Actor</TableHead>
+              <TableHead>Target Entity</TableHead>
+              <TableHead>Details / Metadata</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {logs.map((log: any) => (
+              <TableRow key={log.id} className="font-mono text-[11px]">
+                <TableCell className="text-zinc-400">
+                  {new Date(log.created_at).toLocaleString()}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="primary" size="sm">
+                    {log.action}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-zinc-200">
+                  {log.actor_email || log.actor_id?.slice(0, 8) || 'System'}
+                </TableCell>
+                <TableCell className="text-zinc-300">
+                  {log.target_entity} ({log.target_id?.slice(0, 8)})
+                </TableCell>
+                <TableCell className="text-zinc-400 max-w-xs truncate">
+                  {log.details ? JSON.stringify(log.details) : '—'}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

@@ -4,8 +4,12 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useToast } from '@/context/ToastContext';
-import { Settings, Tag, Shield, Percent, Plus, FolderPlus, CheckCircle2 } from 'lucide-react';
-import { CardSkeleton } from '@/components/ui/LoadingSkeleton';
+import { Tag, Shield, Percent, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Badge } from '@/components/ui/Badge';
+import { Card } from '@/components/ui/Card';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default function AdminSettingsPage() {
   const queryClient = useQueryClient();
@@ -53,49 +57,46 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-4xl">
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Settings className="w-6 h-6 text-indigo-400" />
-          Platform Settings & Governance
-        </h1>
-        <p className="text-xs text-slate-400 mt-1">
-          Configure marketplace fee structures, taxonomy categories, and security parameters.
-        </p>
-      </div>
+    <div className="space-y-6 max-w-4xl">
+      <PageHeader
+        title="Platform Governance & Taxonomy Settings"
+        description="Configure marketplace fee structures, taxonomy categories, and security policies."
+        badgeText="System Config"
+        badgeVariant="primary"
+      />
 
       {/* Commission & Fees Card */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+      <Card className="p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
           <Percent className="w-4 h-4 text-emerald-400" />
-          Marketplace Commission Architecture
+          <span>Marketplace Commission Architecture</span>
         </h2>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-zinc-400">
           Global platform fee applied dynamically across all completed checkout transactions.
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-          <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-800">
-            <div className="text-xs text-slate-400">Platform Take Rate</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+          <div className="p-4 bg-zinc-950 rounded-xl border border-zinc-800">
+            <div className="text-xs text-zinc-400 font-medium">Platform Take Rate</div>
             <div className="text-xl font-bold text-emerald-400 mt-1">10.00%</div>
-            <div className="text-[11px] text-slate-500 mt-1">Deducted from gross GMV upon order settlement</div>
+            <div className="text-[11px] text-zinc-400 mt-1">Deducted from gross GMV upon order settlement</div>
           </div>
-          <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-800">
-            <div className="text-xs text-slate-400">Provider Net Share</div>
-            <div className="text-xl font-bold text-white mt-1">90.00%</div>
-            <div className="text-[11px] text-slate-500 mt-1">Disbursed to client business escrow ledger</div>
+          <div className="p-4 bg-zinc-950 rounded-xl border border-zinc-800">
+            <div className="text-xs text-zinc-400 font-medium">Provider Net Share</div>
+            <div className="text-xl font-bold text-zinc-100 mt-1">90.00%</div>
+            <div className="text-[11px] text-zinc-400 mt-1">Disbursed to client business escrow ledger</div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Category Management */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+      <Card className="p-6 space-y-5">
         <div>
-          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
             <Tag className="w-4 h-4 text-indigo-400" />
-            Marketplace Service Categories
+            <span>Marketplace Service Categories</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-zinc-400 mt-0.5">
             Manage product and service taxonomy available for clients when publishing offerings.
           </p>
         </div>
@@ -105,103 +106,84 @@ export default function AdminSettingsPage() {
           {categories.map((c: any) => (
             <span
               key={c.id}
-              className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-xl text-xs text-slate-200 flex items-center gap-1.5"
+              className="px-3 py-1 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-300 flex items-center gap-1.5"
             >
-              <Tag className="w-3 h-3 text-indigo-400" />
-              {c.name}
-              <span className="text-[10px] text-slate-500 font-mono">({c.slug})</span>
+              <Tag className="w-3.5 h-3.5 text-indigo-400" />
+              <span>{c.name}</span>
+              <span className="text-[10px] text-zinc-400 font-mono">({c.slug})</span>
             </span>
           ))}
         </div>
 
         {/* Add Category Form */}
-        <form onSubmit={handleCreateCategory} className="pt-4 border-t border-slate-800 space-y-4">
-          <h3 className="text-xs font-bold text-white flex items-center gap-1.5">
-            <FolderPlus className="w-4 h-4 text-indigo-400" />
-            Add New Service Category
-          </h3>
+        <form onSubmit={handleCreateCategory} className="pt-4 border-t border-zinc-800 space-y-4">
+          <h3 className="text-xs font-semibold text-zinc-100">Add New Service Category</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Category Name</label>
-              <input
-                type="text"
-                required
-                value={categoryName}
-                onChange={(e) => {
-                  setCategoryName(e.target.value);
-                  if (!categorySlug) {
-                    setCategorySlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
-                  }
-                }}
-                placeholder="e.g. Graphic Design"
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Slug (URL identifier)</label>
-              <input
-                type="text"
-                required
-                value={categorySlug}
-                onChange={(e) => setCategorySlug(e.target.value)}
-                placeholder="e.g. graphic-design"
-                className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">Description (Optional)</label>
-            <input
-              type="text"
-              value={categoryDesc}
-              onChange={(e) => setCategoryDesc(e.target.value)}
-              placeholder="Brief description of the service domain..."
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+            <Input
+              label="Category Name *"
+              required
+              value={categoryName}
+              onChange={(e) => {
+                setCategoryName(e.target.value);
+                if (!categorySlug) {
+                  setCategorySlug(e.target.value.toLowerCase().replace(/\s+/g, '-'));
+                }
+              }}
+              placeholder="e.g. Graphic Design"
+            />
+            <Input
+              label="Slug (URL identifier) *"
+              required
+              value={categorySlug}
+              onChange={(e) => setCategorySlug(e.target.value)}
+              placeholder="e.g. graphic-design"
             />
           </div>
 
-          <button
+          <Input
+            label="Description (Optional)"
+            value={categoryDesc}
+            onChange={(e) => setCategoryDesc(e.target.value)}
+            placeholder="Brief description of the service domain..."
+          />
+
+          <Button
             type="submit"
-            disabled={categoryMutation.isPending}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white rounded-xl text-xs font-semibold shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2"
+            variant="primary"
+            size="sm"
+            isLoading={categoryMutation.isPending}
+            leftIcon={<Plus className="w-4 h-4" />}
           >
-            <Plus className="w-4 h-4" />
-            {categoryMutation.isPending ? 'Creating...' : 'Create Category'}
-          </button>
+            Create Category
+          </Button>
         </form>
-      </div>
+      </Card>
 
       {/* Security & Access Policies */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-        <h2 className="text-sm font-bold text-white flex items-center gap-2">
+      <Card className="p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
           <Shield className="w-4 h-4 text-rose-400" />
-          Security & Access Enforcements
+          <span>Security & Access Enforcements</span>
         </h2>
-        <div className="space-y-3 text-xs text-slate-300">
-          <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+        <div className="space-y-2.5 text-xs text-zinc-300">
+          <div className="flex items-center justify-between p-3 bg-zinc-950 rounded-xl border border-zinc-800">
             <div>
-              <div className="font-medium text-white">Client Business KYC Verification Gate</div>
-              <div className="text-[11px] text-slate-400">Strictly block unapproved clients from publishing services or taking payments</div>
+              <div className="font-semibold text-zinc-100">Client Business KYC Verification Gate</div>
+              <div className="text-[11px] text-zinc-400">Strictly block unapproved clients from publishing services or taking payments</div>
             </div>
-            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg font-bold text-[10px]">
-              ENFORCED
-            </span>
+            <Badge variant="success" size="sm">ENFORCED</Badge>
           </div>
 
-          <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+          <div className="flex items-center justify-between p-3 bg-zinc-950 rounded-xl border border-zinc-800">
             <div>
-              <div className="font-medium text-white">JWT Access & Refresh Rotation</div>
-              <div className="text-[11px] text-slate-400">RFC 7519 jti unique token invalidation and automated sliding sessions</div>
+              <div className="font-semibold text-zinc-100">JWT Access & Refresh Token Security</div>
+              <div className="text-[11px] text-zinc-400">RFC 7519 jti unique token invalidation and sliding sessions</div>
             </div>
-            <span className="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-lg font-bold text-[10px]">
-              ACTIVE
-            </span>
+            <Badge variant="success" size="sm">ACTIVE</Badge>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
